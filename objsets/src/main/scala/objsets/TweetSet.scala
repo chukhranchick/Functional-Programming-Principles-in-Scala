@@ -119,6 +119,8 @@ class Empty extends TweetSet:
 
   def foreach(f: Tweet => Unit): Unit = ()
 
+  override def union(that: TweetSet): TweetSet = that
+
   override def mostRetweeted: Tweet = throw new NoSuchElementException()
 
   override def descendingByRetweet: TweetList = Nil
@@ -131,7 +133,6 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet:
     if p(elem) then filteredSubTrees.incl(elem)
     else filteredSubTrees
   }
-
 
   /**
    * The following methods are already implemented
@@ -164,6 +165,9 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet:
     f(elem)
     left.foreach(f)
     right.foreach(f)
+
+  override def union(that: TweetSet): TweetSet =
+    right.union(left.union(that.incl(elem)))
 
   override def mostRetweeted: Tweet = {
     val mostRetweetedSet =
@@ -208,11 +212,10 @@ class Cons(val head: Tweet, val tail: TweetList) extends TweetList:
 object GoogleVsApple:
   val google = List("android", "Android", "galaxy", "Galaxy", "nexus", "Nexus")
   val apple = List("ios", "iOS", "iphone", "iPhone", "ipad", "iPad")
-
-  lazy val googleTweets: TweetSet =  new TweetReader.allTweets
-    .filter(tweet => google.exists(kw => tweet.text.contains(kw)))
-  lazy val appleTweets: TweetSet = new TweetReader.allTweets
-    .filter(tweet => google.exists(kw => tweet.text.contains(kw)))
+  def Mentioning(dictionary: List[String]): TweetSet =
+    TweetReader.allTweets.filter(tweet => dictionary.exists(kw => tweet.text.contains(kw)))
+  lazy val googleTweets: TweetSet = Mentioning(google)
+  lazy val appleTweets: TweetSet = Mentioning(apple)
 
   /**
    * A list of all tweets mentioning a keyword from either apple or google,
